@@ -16,7 +16,6 @@ tauri-build = { version = "1.2", features = [] }
 tauri = { version = "1.2", features = ["api-all"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tokio = { version = "1", features = ["rt", "net", "rt-multi-thread"] }
 prost = "0.11.2"
 tonic = "0.8.2"
 vega_protobufs = { path = "../../vega-rust-sdk/protobufs"}

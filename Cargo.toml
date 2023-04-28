@@ -14,7 +14,8 @@ web-sys = "0.3"
 js-sys = "0.3"
 log = "0.4"
 wasm-logger = "0.2"
-tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "dev" }
+getrandom = { version = "0.2", features = ["js"] } # https://docs.rs/getrandom/0.2.2/getrandom/#indirect-dependencies
 
 [workspace]
 members = ["src-tauri"]
+

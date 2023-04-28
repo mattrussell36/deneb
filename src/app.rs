@@ -3,7 +3,6 @@ use serde_wasm_bindgen::to_value;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
-// use yew::{prelude::*, html::IntoPropValue};
 use log::info;
 use wasm_bindgen::prelude::*;
 
@@ -92,7 +91,6 @@ impl Component for App {
 }
 
 async fn send_greet_name(m: &str) -> String {
-    info!("in spawn");
     let args = to_value(&GreetArgs { name: m }).unwrap();
     invoke("greet", args).await.as_string().unwrap()
 }

@@ -4,7 +4,7 @@ use serde_wasm_bindgen::to_value;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use wasm_bindgen::prelude::*;
-use types::market::{Market, MarketsResult};
+use types::market::{Market, MarketsResult, TradableInstrument, Instrument};
 use web_sys::HtmlInputElement;
 
 
@@ -76,10 +76,7 @@ impl Component for Markets {
             },
             false => {
                 let term = &self.search_term.to_uppercase();
-                let markets = self.markets
-                    .iter()
-                    .filter(|m| m.tradable_instrument.instrument.code.contains(term))
-                    .collect::<Vec<_>>();
+                let markets = filter_markets(&self.markets, &term.to_string());
 
                 html! {
                     <div class="h-full grid grid-rows-[min-content_1fr]">
@@ -124,4 +121,45 @@ async fn get_markets() -> MarketsResult {
     let args = to_value(&{}).unwrap();
     let result = invoke("get_markets", args).await.as_string().unwrap();
     from_str(&result).unwrap()
+}
+
+fn filter_markets(markets: &Vec<Market>, term: &str) -> Vec<Market> {
+    markets
+        .iter()
+        .cloned()
+        .filter(|m| m.tradable_instrument.instrument.code.contains(&term))
+        .collect::<Vec<_>>()
+}
+
+#[test]
+fn test_filter_markets() {
+    let test_markets = vec![
+        Market {
+            id: String::from("1"),
+            decimal_places: 2,
+            position_decimal_places: 2,
+            tradable_instrument: TradableInstrument {
+                instrument: Instrument {
+                    id: String::from("instrument-id"),
+                    code: String::from("a"),
+                    name: String::from("instrument-name")
+                }
+            }
+        },
+        Market {
+            id: String::from("2"),
+            decimal_places: 2,
+            position_decimal_places: 2,
+            tradable_instrument: TradableInstrument {
+                instrument: Instrument {
+                    id: String::from("instrument-id"),
+                    code: String::from("b"),
+                    name: String::from("instrument-name")
+                }
+            }
+        }
+    ];
+    assert_eq!(filter_markets(&test_markets, "c").len(), 0);
+    assert_eq!(filter_markets(&test_markets, "a").len(), 1);
+    assert_eq!(filter_markets(&test_markets, "b").len(), 1);
 }

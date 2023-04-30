@@ -5,6 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use wasm_bindgen::prelude::*;
 use types::market::{Market, MarketsResult};
+use web_sys::HtmlInputElement;
 
 
 #[wasm_bindgen]
@@ -21,11 +22,13 @@ struct ListMarketsArgs<'a> {
 pub struct Markets {
     markets: Vec<Market>,
     loading: bool,
+    search_term: String,
 }
 
 pub enum Msg {
     GetMarkets,
-    RecieveMarkets(MarketsResult)
+    RecieveMarkets(MarketsResult),
+    SetSearchTerm(String)
 }
 
 impl Component for Markets {
@@ -36,6 +39,7 @@ impl Component for Markets {
         Self { 
             markets: vec![],
             loading: false,
+            search_term: String::from("")
         }
     }
 
@@ -54,11 +58,16 @@ impl Component for Markets {
                 self.markets = data.markets;
                 self.loading = false;
                 true
+            },
+            Msg::SetSearchTerm(term) => {
+                self.search_term = term;
+                true
             }
         }
     }
 
-    fn view(&self, _ctx: &Context<Self>) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let link = ctx.link();
         match self.loading {
             true => {
                 html! {
@@ -66,15 +75,36 @@ impl Component for Markets {
                 }
             },
             false => {
+                let term = &self.search_term.to_uppercase();
+                let markets = self.markets
+                    .iter()
+                    .filter(|m| m.tradable_instrument.instrument.code.contains(term))
+                    .collect::<Vec<_>>();
+
                 html! {
-                    <div class="h-full overflow-auto">
-                        <ul>
-                        { for self.markets.iter().map(|m| html! {
-                            <li class="p-4 border-b border-slate-100">
-                                <div>{ &m.tradable_instrument.instrument.code }</div>
-                            </li>
-                        }) }
-                        </ul> 
+                    <div class="h-full grid grid-rows-[min-content_1fr]">
+                        <div>
+                            <input 
+                                oninput={link.callback(|e: InputEvent| {
+                                    let input: HtmlInputElement = e.target_unchecked_into();
+                                    let value = input.value();
+                                    Msg::SetSearchTerm(value)
+                                })} 
+                                type="text"
+                                class="px-4 py-2 w-full outline-none focus:bg-slate-100"
+                                placeholder="Search..."
+                                autocomplete="off"
+                            /> 
+                        </div>
+                        <div class="overflow-auto">
+                            <ul>
+                            { for markets.iter().map(|m| html! {
+                                <li class="p-4 border-b border-slate-100">
+                                    <div>{ &m.tradable_instrument.instrument.code }</div>
+                                </li>
+                            }) }
+                            </ul> 
+                        </div>
                     </div>
                 }
             }

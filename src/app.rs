@@ -65,9 +65,8 @@ impl Component for App {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link();
         html! {
-            <main class="container bg-black">
+            <div class="p-4">
                 <form
-                    class="row"
                     onsubmit={link.callback(|e: SubmitEvent| {
                         e.prevent_default();
                         Msg::Submit
@@ -85,7 +84,7 @@ impl Component for App {
                 </form>
                 <div>{"text: "}{&self.message}</div>
                 <div>{"greeting: "}{&self.greeting}</div>
-            </main>
+            </div>
         }
     }
 }

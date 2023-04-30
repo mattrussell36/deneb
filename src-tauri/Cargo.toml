@@ -21,6 +21,7 @@ tonic = "0.8.2"
 vega_protobufs = { path = "../../vega-rust-sdk/protobufs"}
 log = "0.4"
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "dev" }
+types = { path = "../types"}
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

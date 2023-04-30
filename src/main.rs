@@ -8,10 +8,13 @@ use yew::prelude::*;
 #[function_component(Root)]
 fn root() -> Html {
     html! {
-        <div>
-            <h1>{ "Rust Console" }</h1>
-            <App />
-            <Markets />
+        <div class="w-screen h-screen grid grid-cols-[300px_1fr]">
+            <div class="min-h-0 border-r border-slate-200">
+                <Markets />
+            </div>
+            <main class="min-h-0">
+                <App />
+            </main>
         </div> 
     }
 }

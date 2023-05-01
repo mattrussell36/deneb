@@ -41,7 +41,7 @@
         "fullscreen": false,
         "resizable": true,
         "title": "rust-console",
-        "width": 1600,
+        "width": 1200,
         "height": 800
       }
     ]

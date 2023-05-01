@@ -2,7 +2,7 @@
 pub mod market {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Clone, Deserialize, Serialize)]
+    #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
     pub struct Market {
         pub id: String,
         pub decimal_places: u64,
@@ -16,12 +16,12 @@ pub mod market {
     }
 
 
-    #[derive(Debug, Clone, Deserialize, Serialize)]
+    #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
     pub struct TradableInstrument {
         pub instrument: Instrument,
     }
 
-    #[derive(Debug, Clone, Deserialize, Serialize)]
+    #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
     pub struct Instrument {
         pub id: String,
         pub code: String,

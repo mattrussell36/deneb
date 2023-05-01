@@ -1,3 +1,5 @@
+
+mod utils;
 mod app_init;
 mod trade;
 mod market_list;

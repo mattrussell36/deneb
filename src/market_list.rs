@@ -1,6 +1,7 @@
 use yew::prelude::*;
 use types::market::Market;
 use web_sys::HtmlInputElement;
+use crate::utils::console_log;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct Props {
@@ -37,7 +38,9 @@ pub fn MarketList(props: &Props) -> Html {
                         <li class="border-b border-slate-100">
                             <button
                                 onclick={move |_: MouseEvent| {
-                                    on_change.emit(m.id.clone());
+                                    let id = m.id.clone();
+                                    console_log(format!("selected {}", id));
+                                    on_change.emit(id);
                                 }}
                                 class="w-full p-4 text-left enabled:focus:bg-slate-300 outline-none"
                                 type="button"

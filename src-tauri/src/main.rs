@@ -4,9 +4,18 @@
 use tauri_plugin_log;
 use log::info;
 use vega_protobufs::datanode::api::v2::{
-    trading_data_service_client::TradingDataServiceClient, ListMarketsRequest, ListMarketsResponse
+    trading_data_service_client::TradingDataServiceClient,
+    ListMarketsRequest,
+    ListMarketsResponse,
 };
-use types::market::{Market, MarketsResult, Instrument, TradableInstrument};
+use types::market::{
+    Market,
+    MarketsResult,
+    Instrument,
+    TradableInstrument,
+    TradingMode,
+    State
+};
 
 const NODE_ADDRESS: &str = "tcp://n06.testnet.vega.xyz:3007";
 
@@ -59,7 +68,29 @@ async fn get_markets() -> Result<String, String> {
                             code: instrument.code.clone(),
                             name: instrument.name.clone(),
                         }
-                    } 
+                    },
+                    trading_mode: match node.trading_mode {
+                        0 => TradingMode::Unspecified,
+                        1 => TradingMode::Continuous,
+                        2 => TradingMode::BatchAuction,
+                        3 => TradingMode::OpeningAuction,
+                        4 => TradingMode::MonitoringAuction,
+                        5 => TradingMode::NoTrading,
+                        _ => TradingMode::Unspecified,
+                    },
+                    state: match node.state {
+                        0 => State::Unspecified,
+                        1 => State::Proposed,
+                        2 => State::Rejected,
+                        3 => State::Pending,
+                        4 => State::Cancelled,
+                        5 => State::Active,
+                        6 => State::Suspended,
+                        7 => State::Closed,
+                        8 => State::TradingTerminated,
+                        9 => State::Settled,
+                        _ => State::Unspecified,
+                    }
                 }
             }).collect();
             let result = MarketsResult {

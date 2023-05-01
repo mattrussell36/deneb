@@ -8,6 +8,7 @@ use types::market::{Market, MarketsResult};
 
 use crate::market_list::MarketList;
 use crate::trade::Trade;
+use crate::utils::console_log;
 
 #[wasm_bindgen]
 extern "C" {
@@ -56,6 +57,7 @@ impl Component for AppInit{
                 true
             },
             Msg::RecieveMarkets(data) => {
+                console_log(format!("recieved {} markets", data.markets.len()));
                 self.markets = data.markets;
                 self.loading = false;
                 true

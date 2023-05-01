@@ -19,27 +19,35 @@ struct ListMarketsArgs<'a> {
     name: &'a str,
 }
 
+#[derive(Properties, PartialEq, Clone)]
+pub struct MarketsProps {
+    pub on_market_change: Callback<String>,
+}
+
 pub struct Markets {
     markets: Vec<Market>,
     loading: bool,
     search_term: String,
+    props: MarketsProps,
 }
 
 pub enum Msg {
     GetMarkets,
     RecieveMarkets(MarketsResult),
-    SetSearchTerm(String)
+    SetSearchTerm(String),
+    SelectMarket(String)
 }
 
 impl Component for Markets {
     type Message = Msg;
-    type Properties = ();
+    type Properties = MarketsProps;
 
-    fn create(_: &Context<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self { 
             markets: vec![],
             loading: false,
-            search_term: String::from("")
+            search_term: String::from(""),
+            props: ctx.props().clone()
         }
     }
 
@@ -62,19 +70,25 @@ impl Component for Markets {
             Msg::SetSearchTerm(term) => {
                 self.search_term = term;
                 true
+            },
+            Msg::SelectMarket(market_id) => {
+                self.props.on_market_change.emit(market_id);
+                false
             }
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let link = ctx.link();
         match self.loading {
             true => {
                 html! {
-                    <h1>{"Loading"}</h1>
+                    <div class="p-4">
+                        <h1>{"Loading"}</h1>
+                    </div>
                 }
             },
             false => {
+                let link = ctx.link();
                 let term = &self.search_term.to_uppercase();
                 let markets = filter_markets(&self.markets, &term.to_string());
 
@@ -95,11 +109,22 @@ impl Component for Markets {
                         </div>
                         <div class="overflow-auto">
                             <ul>
-                            { for markets.iter().map(|m| html! {
-                                <li class="p-4 border-b border-slate-100">
-                                    <div>{ &m.tradable_instrument.instrument.code }</div>
-                                </li>
-                            }) }
+                            { for markets.iter().cloned().map(|m| {
+                                html! {
+                                    <li class="border-b border-slate-100">
+                                        <button
+                                            onclick={link.callback(move |_: MouseEvent| {
+                                                let id = m.id.clone();
+                                                Msg::SelectMarket(id)
+                                            })}
+                                            class="w-full p-4 text-left"
+                                            type="button"
+                                        >
+                                            { &m.tradable_instrument.instrument.code }
+                                        </button>
+                                    </li>
+                                }
+                            })}
                             </ul> 
                         </div>
                     </div>

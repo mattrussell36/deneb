@@ -30,17 +30,45 @@ async fn list_markets() -> Result<ListMarketsResponse, Box<dyn std::error::Error
     let count = edges.len();
     info!("found {} markets", count);
 
-
-    // for mkt in resp.get_ref().markets.as_ref().unwrap().edges.iter() {
-    //     info!("{:#?}", mkt.node.as_ref().unwrap());
-    // }
     let x = resp.get_ref().clone();
     Ok(x)
 }
 
 #[tauri::command]
 async fn get_markets() -> Result<String, String> {
-    info!("listing!");
+    // let markets = vec![
+    //     Market {
+    //         id: "1".to_string(),
+    //         decimal_places: 2,
+    //         position_decimal_places: 5,
+    //         tradable_instrument: TradableInstrument {
+    //             instrument: Instrument {
+    //                 id: "instrument-1-id".to_string(),
+    //                 code: "instrument-1-code".to_string(), 
+    //                 name: "instrument-1-name".to_string(),
+    //             }
+    //         } 
+    //     },
+    //     Market {
+    //         id: "2".to_string(),
+    //         decimal_places: 2,
+    //         position_decimal_places: 5,
+    //         tradable_instrument: TradableInstrument {
+    //             instrument: Instrument {
+    //                 id: "instrument-2-id".to_string(),
+    //                 code: "instrument-2-code".to_string(), 
+    //                 name: "instrument-2-name".to_string(),
+    //             }
+    //         } 
+    //     }
+    // ];
+    // let result = MarketsResult {
+    //     markets: markets
+    // };
+    // let json = serde_json::to_string(&result).unwrap();
+    // Ok(json)
+
+
     let result = list_markets().await;
     match result {
         Ok(data) => {

@@ -17,9 +17,15 @@ struct GreetArgs<'a> {
     name: &'a str,
 }
 
+#[derive(Properties, PartialEq, Clone)]
+pub struct AppProps {
+    pub market_id: String,
+}
+
 pub struct App {
     message: String,
     greeting: String,
+    props: AppProps,
 }
 
 pub enum Msg {
@@ -30,12 +36,13 @@ pub enum Msg {
 
 impl Component for App {
     type Message = Msg;
-    type Properties = ();
+    type Properties = AppProps;
 
-    fn create(_: &Context<Self>) -> Self {
-        Self { 
+    fn create(ctx: &Context<Self>) -> Self {
+        App { 
             message: String::from("bar"),
             greeting: String::from("default greeting"),
+            props: ctx.props().clone()
         }
     }
 
@@ -66,6 +73,7 @@ impl Component for App {
         let link = ctx.link();
         html! {
             <div class="p-4">
+                <h1>{"prop: "}{self.props.market_id.clone()}</h1>
                 <form
                     onsubmit={link.callback(|e: SubmitEvent| {
                         e.prevent_default();

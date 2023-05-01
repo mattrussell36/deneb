@@ -7,7 +7,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "rust-console",
+    "productName": "deneb",
     "version": "0.0.0"
   },
   "tauri": {
@@ -40,7 +40,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "rust-console",
+        "title": "deneb",
         "width": 1200,
         "height": 800
       }

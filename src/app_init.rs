@@ -33,7 +33,7 @@ pub enum Msg {
     SelectMarket(String)
 }
 
-impl Component for AppInit{
+impl Component for AppInit {
     type Message = Msg;
     type Properties = ();
 
@@ -80,23 +80,27 @@ impl Component for AppInit{
             },
             false => {
                 let link = ctx.link();
-                let markets = self.markets.clone();
-                let markets2 = self.markets.clone();
-                let market = markets.iter().find(|&m| m.id == self.market_id);
+                let market = self.markets
+                    .iter()
+                    .find(|m| m.id == self.market_id)
+                    .cloned();
 
                 html! {
                     <div class="w-screen h-screen grid grid-cols-[300px_1fr] border-t border-slate-200">
                         <div class="min-h-0 border-r border-slate-200">
-                            <MarketList markets={markets2} on_market_change={link.callback(|id| {
-                                Msg::SelectMarket(String::from(id))
-                            })} />
+                            <MarketList
+                                markets={self.markets.clone()}
+                                market_id={self.market_id.clone()}
+                                on_market_change={link.callback(|id| {
+                                    Msg::SelectMarket(String::from(id))
+                                })}
+                            />
                         </div>
                         <main class="min-h-0">
                             {match market {
                                 Some(m) => {
-                                    let market = m.clone();
                                     html! {
-                                        <Trade market={market} />
+                                        <Trade market={m} />
                                     }
                                 },
                                 None => html! {

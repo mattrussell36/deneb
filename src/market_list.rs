@@ -6,14 +6,14 @@ use crate::utils::console_log;
 #[derive(Properties, PartialEq, Clone)]
 pub struct Props {
     pub markets: Vec<Market>,
+    pub market_id: String,
     pub on_market_change: Callback<String>
 }
 
-#[function_component]
-pub fn MarketList(props: &Props) -> Html {
+#[function_component(MarketList)]
+pub fn market_list(props: &Props) -> Html {
     let search_term = use_state(|| String::from(""));
-    let m = props.markets.clone();
-    let markets = filter_markets(&m, &search_term.to_string().to_uppercase());
+    let markets = filter_markets(&props.markets, &search_term.to_string().to_uppercase());
 
     html! {
         <div class="h-full grid grid-rows-[min-content_1fr]">
@@ -32,8 +32,14 @@ pub fn MarketList(props: &Props) -> Html {
             </div>
             <div class="overflow-auto">
                 <ul>
-                { for markets.iter().cloned().map(|m| {
+                { for markets.iter().cloned().map(move |m| {
                     let on_change = props.on_market_change.clone();
+                    let mut active_class = "";
+                    if props.market_id == m.id {
+                        active_class = "bg-slate-200"
+                    }
+                    let class_name = format!("w-full p-4 text-left focus:ring-2 ring-blue-200 ring-inset outline-none {}", active_class);
+
                     html! {
                         <li class="border-b border-slate-100">
                             <button
@@ -42,10 +48,10 @@ pub fn MarketList(props: &Props) -> Html {
                                     console_log(format!("selected {}", id));
                                     on_change.emit(id);
                                 }}
-                                class="w-full p-4 text-left enabled:focus:bg-slate-300 outline-none"
+                                class={class_name}
                                 type="button"
                             >
-                                { &m.tradable_instrument.instrument.code }
+                                { &m.instrument_code }
                             </button>
                         </li>
                     }
@@ -60,13 +66,13 @@ fn filter_markets(markets: &Vec<Market>, term: &str) -> Vec<Market> {
     markets
         .iter()
         .cloned()
-        .filter(|m| m.tradable_instrument.instrument.code.contains(&term))
+        .filter(|m| m.instrument_code.contains(&term))
         .collect::<Vec<_>>()
 }
 
 
 #[allow(unused_imports)] // for testing
-use types::market::{TradableInstrument, Instrument};
+use types::market::{State, TradingMode};
 
 #[test]
 fn test_filter_markets() {
@@ -75,25 +81,19 @@ fn test_filter_markets() {
             id: String::from("1"),
             decimal_places: 2,
             position_decimal_places: 2,
-            tradable_instrument: TradableInstrument {
-                instrument: Instrument {
-                    id: String::from("instrument-id"),
-                    code: String::from("a"),
-                    name: String::from("instrument-name")
-                }
-            }
+            instrument_code: String::from("a"),
+            instrument_name: String::from("instrument-name"),
+            state: State::Active,
+            trading_mode: TradingMode::Continuous,
         },
         Market {
             id: String::from("2"),
             decimal_places: 2,
             position_decimal_places: 2,
-            tradable_instrument: TradableInstrument {
-                instrument: Instrument {
-                    id: String::from("instrument-id"),
-                    code: String::from("b"),
-                    name: String::from("instrument-name")
-                }
-            }
+            instrument_code: String::from("b"),
+            instrument_name: String::from("instrument-name"),
+            state: State::Active,
+            trading_mode: TradingMode::Continuous,
         }
     ];
     assert_eq!(filter_markets(&test_markets, "c").len(), 0);

@@ -1,6 +1,10 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod store;
+
+extern crate directories;
+
 use tauri_plugin_log;
 use log::info;
 use vega_protobufs::datanode::api::v2::{
@@ -11,13 +15,12 @@ use vega_protobufs::datanode::api::v2::{
 use types::market::{
     Market,
     MarketsResult,
-    Instrument,
-    TradableInstrument,
     TradingMode,
     State
 };
 
 const NODE_ADDRESS: &str = "tcp://n06.testnet.vega.xyz:3007";
+
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -45,12 +48,32 @@ async fn list_markets() -> Result<ListMarketsResponse, Box<dyn std::error::Error
 
 #[tauri::command]
 async fn get_markets() -> Result<String, String> {
+    info!("get_markets");
+    let stored_markets = store::get_markets();
+
+    match stored_markets {
+        Ok(data) => {
+            if data.len() > 0 {
+                let result = MarketsResult {
+                    markets: data,
+                };
+                let json = serde_json::to_string(&result).unwrap();
+                return Ok(json);
+            }
+        },
+        Err(_) => {
+            info!("no stored markets");
+        }
+    }
+
+    info!("fetching markets");
     let result = list_markets().await;
+
     match result {
         Ok(data) => {
             // convert markets response into struct that is serializable
             // to allow sending to the frontend
-            let markets = data.markets.as_ref().unwrap().edges.iter().map(|edge| {
+            let markets: Vec<Market> = data.markets.as_ref().unwrap().edges.iter().map(|edge| {
                 let node = edge.node.as_ref().unwrap();
                 let instrument = node.tradable_instrument
                     .as_ref()
@@ -62,13 +85,8 @@ async fn get_markets() -> Result<String, String> {
                     id: node.id.clone(),
                     decimal_places: node.decimal_places,
                     position_decimal_places: node.position_decimal_places,
-                    tradable_instrument: TradableInstrument {
-                        instrument: Instrument {
-                            id: instrument.id.clone(),
-                            code: instrument.code.clone(),
-                            name: instrument.name.clone(),
-                        }
-                    },
+                    instrument_code: instrument.code.clone(),
+                    instrument_name: instrument.name.clone(),
                     trading_mode: match node.trading_mode {
                         0 => TradingMode::Unspecified,
                         1 => TradingMode::Continuous,
@@ -93,6 +111,9 @@ async fn get_markets() -> Result<String, String> {
                     }
                 }
             }).collect();
+
+            store::set_markets(markets.clone()).unwrap();
+
             let result = MarketsResult {
                 markets: markets,
             };

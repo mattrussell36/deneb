@@ -6,20 +6,19 @@ pub struct Props {
     pub market: Market,
 }
 
-#[function_component]
-pub fn Trade(props: &Props) -> Html {
-    let tradable_instrument = props.market.tradable_instrument.clone();
-    let instrument = tradable_instrument.instrument.clone();
-
+#[function_component(Trade)]
+pub fn trade(props: &Props) -> Html {
+    let market_context = props.market.clone();
+    let market = &props.market;
     html! { 
-        <ContextProvider<Market> context={props.market.clone()}>
+        <ContextProvider<Market> context={market_context}>
             <div>
                 <div class="p-4 border-b border-slate-200">
-                    <h1 class="text-lg">{instrument.code}</h1> 
-                    <p class="text-sm text-slate-600 mb-1">{instrument.name}</p>
+                    <h1 class="text-lg">{&market.instrument_code}</h1> 
+                    <p class="text-sm text-slate-600 mb-1">{&market.instrument_name}</p>
                     <div class="flex gap-1">
-                        <Pill>{"Status: "}{props.market.state.clone()}</Pill> 
-                        <Pill>{"Trading mode: "}{props.market.trading_mode.clone()}</Pill> 
+                        <Pill>{"Status: "}{&market.state}</Pill> 
+                        <Pill>{"Trading mode: "}{&market.trading_mode}</Pill> 
                     </div>
                 </div>
                 <div class="p-4">
@@ -50,7 +49,7 @@ pub fn Info() -> Html {
 
     html! { 
         <div class="bg-slate-300 rounded py-2 px-4">
-            <h1>{market.tradable_instrument.instrument.code}</h1>
+            <h1>{market.instrument_code}</h1>
         </div>
     }
 }

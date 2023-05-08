@@ -25,6 +25,7 @@ types = { path = "../types"}
 sled = "0.34"
 bincode = "1.3"
 directories = "5.0"
+futures = "0.3"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

@@ -7,14 +7,49 @@ mod markets;
 
 extern crate directories;
 
+use std::sync::Mutex;
+
 use tauri_plugin_log;
 use log::info;
-use tauri::Window;
+use tauri::{Window, async_runtime::JoinHandle};
 use types::market::{
     Market,
     MarketsResult,
-    EventPayload
 };
+
+pub struct AppStateInner {
+    pub handle: Option<JoinHandle<()>>
+} 
+
+impl AppStateInner {
+    pub fn connect(&mut self, window: Window, id: String) {
+        self.abort_handle();
+
+        let handle = tauri::async_runtime::spawn(async move {
+            let _ = markets::subscribe(&id, window)
+                .await;
+        });
+
+        self.handle = Some(handle);         
+    }
+    pub fn disconnect(&self) {
+        self.abort_handle(); 
+    }
+    pub fn abort_handle(&self) {
+        match &self.handle {
+            Some(handle) => {
+                handle.abort()
+            },
+            None => {
+                // no op
+            }
+        } 
+    }
+}
+
+pub struct AppState(pub Mutex<AppStateInner>);
+
+
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -70,19 +105,41 @@ async fn get_markets() -> Result<MarketsResult, String> {
 }
 
 #[tauri::command]
-fn emit_event(window: Window, num: u16) {
-    info!("emit_event called {}", num);
-    window
-        .emit("my-event", EventPayload { message: String::from("foo"), num: 5 })
-        .unwrap();
+fn subscribe_to_market(
+    window: Window,
+    id: String,
+    state: tauri::State<AppState>
+) -> Result<String, String> {
+    info!("subscribing: {}", id);
+    let mut state_guard = state.0.lock().unwrap();
+
+    state_guard.connect(window, id);
+
+    Ok("added".to_string())
+}
+
+#[tauri::command]
+fn unsubscribe_to_market(
+    _window: Window,
+    id: String,
+    state: tauri::State<AppState>
+) -> Result<String, String> {
+    info!("unsubscribing: {}", id);
+    let state_guard = state.0.lock().unwrap();
+
+    state_guard.disconnect();
+
+    Ok("removed".to_string())
 }
 
 fn main() {
     tauri::Builder::default()
+        .manage(AppState(Mutex::new(AppStateInner { handle: None } )))
         .invoke_handler(tauri::generate_handler![
             greet,
             get_markets,
-            emit_event
+            subscribe_to_market,
+            unsubscribe_to_market,
         ])
         .plugin(tauri_plugin_log::Builder::default().build())
         .run(tauri::generate_context!())

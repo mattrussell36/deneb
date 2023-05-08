@@ -1,7 +1,7 @@
 
 mod utils;
 mod app_init;
-mod trade;
+mod market_view;
 mod market_list;
 
 use crate::app_init::AppInit;

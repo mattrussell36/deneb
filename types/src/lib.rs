@@ -95,5 +95,20 @@ pub mod market {
         pub num: u16,
         pub message: String
     }
+
+    #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
+    pub struct SubscribeToMarketArgs {
+        pub id: String,
+    }
+
+    #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+    pub struct MarketData {
+        pub mark_price: String,
+        pub best_bid_price: String,
+        pub best_bid_volume: u64,
+        pub best_offer_price: String,
+        pub best_offer_volume: u64,
+        pub mid_price: String
+    }
 }
 

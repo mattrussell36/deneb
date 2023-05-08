@@ -5,7 +5,7 @@ use types::market::{Market, MarketsResult};
 use tauri_sys::tauri;
 
 use crate::market_list::MarketList;
-use crate::trade::Trade;
+use crate::market_view::MarketView;
 use crate::utils::console_log;
 
 #[derive(Serialize)]
@@ -99,7 +99,7 @@ impl Component for AppInit {
                             {match market {
                                 Some(m) => {
                                     html! {
-                                        <Trade market={m} />
+                                        <MarketView market={m} />
                                     }
                                 },
                                 None => html! {

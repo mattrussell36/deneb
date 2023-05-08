@@ -17,6 +17,8 @@ log = "0.4"
 wasm-logger = "0.2"
 getrandom = { version = "0.2", features = ["js"] } # https://docs.rs/getrandom/0.2.2/getrandom/#indirect-dependencies
 types = { path = "./types"}
+tauri-sys = { git = "https://github.com/JonasKruckenberg/tauri-sys", features = ["all"] }
+futures = "0.3"
 
 [workspace]
 members = ["src-tauri", "types"]

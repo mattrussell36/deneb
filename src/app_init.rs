@@ -1,19 +1,16 @@
 use serde::{Deserialize, Serialize};
-use serde_json::from_str;
-use serde_wasm_bindgen::to_value;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use wasm_bindgen::prelude::*;
 use types::market::{Market, MarketsResult};
+use tauri_sys::tauri;
 
 use crate::market_list::MarketList;
 use crate::trade::Trade;
 use crate::utils::console_log;
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
+#[derive(Serialize)]
+struct GetMarketCmdArgs {
+    name: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -51,7 +48,9 @@ impl Component for AppInit {
             Msg::GetMarkets => {
                 self.loading = true;
                 spawn_local(async move {
-                    let result = get_markets().await;
+                    let result = tauri::invoke("get_markets", &GetMarketCmdArgs { name: "Foo".to_string() })
+                        .await
+                        .unwrap();
                     link.send_message(Msg::RecieveMarkets(result));
                 });
                 true
@@ -122,9 +121,3 @@ impl Component for AppInit {
     }
 }
 
-
-async fn get_markets() -> MarketsResult {
-    let args = to_value(&{}).unwrap();
-    let result = invoke("get_markets", args).await.as_string().unwrap();
-    from_str(&result).unwrap()
-}

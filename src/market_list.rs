@@ -25,7 +25,7 @@ pub fn market_list(props: &Props) -> Html {
                         search_term.set(value);
                     }} 
                     type="text"
-                    class="px-4 py-2 w-full outline-none bg-slate-100 focus:bg-slate-300"
+                    class="px-4 py-2 w-full bg-slate-100 ring-blue-200 ring-inset outline-none"
                     placeholder="Search..."
                     autocomplete="off"
                 /> 
@@ -51,7 +51,8 @@ pub fn market_list(props: &Props) -> Html {
                                 class={class_name}
                                 type="button"
                             >
-                                { &m.instrument_code }
+                                <span class="block">{ &m.instrument_code }</span>
+                                <span class="block text-xs text-slate-500">{format!("{} | {}", &m.state, &m.trading_mode)}</span>
                             </button>
                         </li>
                     }

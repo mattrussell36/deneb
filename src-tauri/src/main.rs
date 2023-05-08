@@ -2,25 +2,19 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod store;
+mod helpers;
+mod markets;
 
 extern crate directories;
 
 use tauri_plugin_log;
 use log::info;
-use vega_protobufs::datanode::api::v2::{
-    trading_data_service_client::TradingDataServiceClient,
-    ListMarketsRequest,
-    ListMarketsResponse,
-};
+use tauri::Window;
 use types::market::{
     Market,
     MarketsResult,
-    TradingMode,
-    State
+    EventPayload
 };
-
-const NODE_ADDRESS: &str = "tcp://n06.testnet.vega.xyz:3007";
-
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -28,26 +22,8 @@ fn greet(name: &str) -> String {
     return format!("Hello, {}! You've been greeted from Rust!", name);
 }
 
-async fn list_markets() -> Result<ListMarketsResponse, Box<dyn std::error::Error>> {
-    let mut client = TradingDataServiceClient::connect(NODE_ADDRESS).await?;
-
-    let resp = client
-        .list_markets(ListMarketsRequest {
-            pagination: None,
-            include_settled: Some(false),
-        })
-        .await?;
-
-    let edges = &resp.get_ref().markets.as_ref().unwrap().edges;
-    let count = edges.len();
-    info!("found {} markets", count);
-
-    let x = resp.get_ref().clone();
-    Ok(x)
-}
-
 #[tauri::command]
-async fn get_markets() -> Result<String, String> {
+async fn get_markets() -> Result<MarketsResult, String> {
     info!("get_markets");
     let stored_markets = store::get_markets();
 
@@ -57,8 +33,7 @@ async fn get_markets() -> Result<String, String> {
                 let result = MarketsResult {
                     markets: data,
                 };
-                let json = serde_json::to_string(&result).unwrap();
-                return Ok(json);
+                return Ok(result);
             }
         },
         Err(_) => {
@@ -67,58 +42,26 @@ async fn get_markets() -> Result<String, String> {
     }
 
     info!("fetching markets");
-    let result = list_markets().await;
+    let result = markets::list_markets().await;
 
     match result {
         Ok(data) => {
             // convert markets response into struct that is serializable
             // to allow sending to the frontend
-            let markets: Vec<Market> = data.markets.as_ref().unwrap().edges.iter().map(|edge| {
-                let node = edge.node.as_ref().unwrap();
-                let instrument = node.tradable_instrument
-                    .as_ref()
-                    .unwrap()
-                    .instrument
-                    .as_ref()
-                    .unwrap();
-                Market {
-                    id: node.id.clone(),
-                    decimal_places: node.decimal_places,
-                    position_decimal_places: node.position_decimal_places,
-                    instrument_code: instrument.code.clone(),
-                    instrument_name: instrument.name.clone(),
-                    trading_mode: match node.trading_mode {
-                        0 => TradingMode::Unspecified,
-                        1 => TradingMode::Continuous,
-                        2 => TradingMode::BatchAuction,
-                        3 => TradingMode::OpeningAuction,
-                        4 => TradingMode::MonitoringAuction,
-                        5 => TradingMode::NoTrading,
-                        _ => TradingMode::Unspecified,
-                    },
-                    state: match node.state {
-                        0 => State::Unspecified,
-                        1 => State::Proposed,
-                        2 => State::Rejected,
-                        3 => State::Pending,
-                        4 => State::Cancelled,
-                        5 => State::Active,
-                        6 => State::Suspended,
-                        7 => State::Closed,
-                        8 => State::TradingTerminated,
-                        9 => State::Settled,
-                        _ => State::Unspecified,
-                    }
-                }
-            }).collect();
+            let markets: Vec<Market> = data.markets
+                .as_ref()
+                .unwrap()
+                .edges
+                .iter()
+                .map(helpers::parse_market)
+                .collect();
 
             store::set_markets(markets.clone()).unwrap();
 
             let result = MarketsResult {
                 markets: markets,
             };
-            let json = serde_json::to_string(&result).unwrap();
-            Ok(json)
+            Ok(result)
         },
         Err(_error) => {
             Err("failed to get markets".into())
@@ -126,13 +69,22 @@ async fn get_markets() -> Result<String, String> {
     }
 }
 
+#[tauri::command]
+fn emit_event(window: Window, num: u16) {
+    info!("emit_event called {}", num);
+    window
+        .emit("my-event", EventPayload { message: String::from("foo"), num: 5 })
+        .unwrap();
+}
+
 fn main() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             greet,
             get_markets,
+            emit_event
         ])
+        .plugin(tauri_plugin_log::Builder::default().build())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

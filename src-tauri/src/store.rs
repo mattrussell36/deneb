@@ -12,13 +12,13 @@ pub fn get_markets() -> Result<Vec<Market>, Error> {
     info!("retrieving markets from db");
     let db = open_db();
     let data = db.get("markets")?;
+    db.flush()?;
     match data {
         Some(d) => {
             let markets: Vec<Market> = bincode::deserialize(&d).unwrap();
             Ok(markets)
         },
         None => {
-            db.flush()?;
             Ok(vec![])
         }
     }

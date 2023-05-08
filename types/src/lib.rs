@@ -89,4 +89,11 @@ pub mod market {
     pub struct MarketsResult {
         pub markets: Vec<Market>
     }
+
+    #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
+    pub struct EventPayload {
+        pub num: u16,
+        pub message: String
+    }
 }
+
